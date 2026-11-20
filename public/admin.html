@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin SPMB — SMK Widya Praja Ungaran</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
+  <script>document.documentElement.dataset.theme=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")</script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="no-dock">
+  <header class="menubar">
+    <div class="mb-left">
+      <span>⚙️</span>
+      <strong>SMK Widya Praja Ungaran</strong>
+      <span class="mb-sub">Admin SPMB</span>
+    </div>
+    <div class="mb-right">
+      <button id="themeBtn" class="mb-btn" title="Ganti tema">🌙</button>
+      <span id="clock" class="mb-clock"></span>
+    </div>
+  </header>
+
+  <main class="desktop">
+    <section class="window login-wrap" id="loginView">
+      <div class="titlebar">
+        <div class="traffic"><span class="tl red"></span><span class="tl yellow"></span><span class="tl green"></span></div>
+        <div class="win-title">Login Admin</div>
+      </div>
+      <form class="login-body" id="formLogin">
+        <div class="lock">🔐</div>
+        <h2 class="sec">Panel Admin SPMB</h2>
+        <p class="sec-sub">Masuk untuk mengelola data pendaftar.</p>
+        <input type="password" id="adminPass" placeholder="Password admin" required autocomplete="current-password">
+        <button class="btn primary" type="submit">Masuk</button>
+        <a class="btn ghost" href="/">← Kembali ke Website SPMB</a>
+      </form>
+    </section>
+
+    <section class="window" id="dashView" hidden>
+      <div class="titlebar">
+        <div class="traffic"><span class="tl red"></span><span class="tl yellow"></span><span class="tl green"></span></div>
+        <div class="win-title">Dashboard Pendaftar — SPMB</div>
+        <span class="win-badge">🗂️</span>
+      </div>
+      <div class="dash-body">
+        <div class="stats" id="adminStats"></div>
+        <div class="toolbar">
+          <input type="search" id="q" placeholder="Cari nama / nomor / NISN / asal sekolah…">
+          <select id="fStatus">
+            <option value="">Semua Status</option>
+            <option>Menunggu Verifikasi</option>
+            <option>Terverifikasi</option>
+            <option>Diterima</option>
+            <option>Ditolak</option>
+          </select>
+          <select id="fJurusan"><option value="">Semua Jurusan</option></select>
+          <button class="btn ghost small" id="btnCsv" type="button">⬇️ CSV</button>
+          <button class="btn ghost small" id="btnRefresh" type="button">🔄</button>
+          <button class="btn danger small" id="btnLogout" type="button">Keluar</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Nomor</th><th>Nama / Asal</th><th>NISN</th><th>Jurusan</th><th>HP/WA</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <p class="foot" id="dashInfo"></p>
+      </div>
+    </section>
+  </main>
+
+  <div class="overlay" id="overlay" hidden>
+    <section class="window modal">
+      <div class="titlebar">
+        <div class="traffic"><button class="tl red" id="modalClose" type="button"></button><span class="tl yellow"></span><span class="tl green"></span></div>
+        <div class="win-title">Detail Pendaftar</div>
+      </div>
+      <div class="window-body" id="modalBody"></div>
+    </section>
+  </div>
+
+  <div id="toasts"></div>
+  <script src="js/theme.js" defer></script>
+  <script src="js/admin.js" defer></script>
+</body>
+</html>

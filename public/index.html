@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPMB — SMK Widya Praja Ungaran</title>
+  <meta name="description" content="Sistem Penerimaan Murid Baru SMK Widya Praja Ungaran. Daftar online, cek status, dan lihat info jurusan.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+  <script>document.documentElement.dataset.theme=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")</script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="menubar">
+    <div class="mb-left">
+      <span>🎓</span>
+      <strong>SMK Widya Praja Ungaran</strong>
+      <span class="mb-sub">SPMB <span class="ta">2027/2028</span></span>
+    </div>
+    <div class="mb-right">
+      <button id="themeBtn" class="mb-btn" title="Ganti tema">🌙</button>
+      <span id="clock" class="mb-clock"></span>
+    </div>
+  </header>
+
+  <main class="desktop">
+    <section class="window">
+      <div class="titlebar">
+        <div class="traffic">
+          <button class="tl red" id="tlRed" type="button" title="Tutup"></button>
+          <button class="tl yellow" type="button" id="tlYellow" title="Minimize"></button>
+          <button class="tl green" type="button" id="tlGreen" title="Zoom"></button>
+        </div>
+        <div class="win-title" id="winTitle">Beranda — SPMB</div>
+        <span class="win-badge">🎓</span>
+      </div>
+      <div class="window-body">
+        <aside class="sidebar">
+          <div class="side-label">Menu SPMB</div>
+          <button class="nav-item active" data-page="beranda">🏠 Beranda</button>
+          <button class="nav-item" data-page="jurusan">🎓 Program Keahlian</button>
+          <button class="nav-item" data-page="alur">🗓️ Alur &amp; Syarat</button>
+          <button class="nav-item" data-page="daftar">📝 Daftar Online</button>
+          <button class="nav-item" data-page="cek">🔍 Cek Status</button>
+          <div class="side-label">Lainnya</div>
+          <a class="nav-item" href="/admin.html">⚙️ Admin</a>
+          <a class="nav-item" href="https://www.smkwidyapraja.sch.id/" target="_blank" rel="noopener">🧭 Website Sekolah</a>
+        </aside>
+
+        <div class="content">
+          <section id="beranda" class="page active">
+            <span class="badge-pill">🎓 SPMB Tahun Ajaran <span class="ta">…</span> — Pendaftaran Online Dibuka</span>
+            <h1 class="hero">SMK Widya Praja<br><span class="grad">Ungaran</span></h1>
+            <p class="hero-sub">SMK Bisa Hebat! · Terakreditasi A · NPSN 20320233</p>
+            <p class="hero-desc">Sekolah kejuruan swasta di Ungaran Barat, Kab. Semarang. Dengan 6 program keahlian, teaching factory, dan pembinaan karakter, kami siap mengantarmu menuju dunia kerja, wirausaha, atau perguruan tinggi.</p>
+            <div class="cta-row">
+              <button class="btn primary" data-page="daftar">📝 Daftar Sekarang</button>
+              <button class="btn ghost" data-page="cek">🔍 Cek Status</button>
+            </div>
+            <div class="stats">
+              <div class="stat"><b id="statPendaftar">0</b><span>Pendaftar Masuk</span></div>
+              <div class="stat"><b id="statKuota">0</b><span>Total Kuota</span></div>
+              <div class="stat"><b>6</b><span>Program Keahlian</span></div>
+              <div class="stat"><b>A</b><span>Akreditasi</span></div>
+            </div>
+            <div class="grid2">
+              <div class="card">
+                <h3>📍 Informasi Sekolah</h3>
+                <div id="infoRows"></div>
+              </div>
+              <div class="card">
+                <h3>⭐ Kenapa Widya Praja?</h3>
+                <ul class="tick">
+                  <li>Akreditasi A dan Sekolah Adiwiyata tingkat kabupaten</li>
+                  <li>18 ruang kelas, 2 lab komputer, perpustakaan, dan masjid</li>
+                  <li>Teaching factory: kantin boga, custom made, hingga desain grafis</li>
+                  <li>Ekstrakurikuler Futsal, PMR, Paskibra, dan lainnya</li>
+                  <li>Lokasi strategis di Jl. Gatot Subroto, pusat kota Ungaran</li>
+                </ul>
+              </div>
+            </div>
+            <p class="foot">© 2026 SMK Widya Praja Ungaran · Sumber data: <a href="https://www.smkwidyapraja.sch.id/" target="_blank" rel="noopener">smkwidyapraja.sch.id</a></p>
+          </section>
+
+          <section id="jurusan" class="page">
+            <h2 class="sec">Program Keahlian</h2>
+            <p class="sec-sub">Enam jurusan siap pakai, lengkap dengan praktik dan teaching factory. Kuota terisi diperbarui otomatis.</p>
+            <div class="jurusan-grid" id="jurusanGrid"></div>
+          </section>
+
+          <section id="alur" class="page">
+            <h2 class="sec">Alur &amp; Syarat Pendaftaran</h2>
+            <p class="sec-sub">Isi formulir online → dapat nomor pendaftaran → verifikasi berkas ke sekolah → pengumuman → daftar ulang.</p>
+            <div class="alur-grid">
+              <div class="card">
+                <h3>🗓️ Jadwal Gelombang</h3>
+                <div id="alurList"></div>
+              </div>
+              <div class="card">
+                <h3>📋 Syarat Berkas</h3>
+                <ul class="tick" id="syaratList"></ul>
+              </div>
+            </div>
+            <div class="note">⚠️ Jadwal dapat berubah sewaktu-waktu. Pantau pengumuman resmi sekolah atau hubungi panitia SPMB.</div>
+          </section>
+
+          <section id="daftar" class="page">
+            <h2 class="sec">Formulir Pendaftaran</h2>
+            <p class="sec-sub" id="daftarIntro">Isi data dengan benar sesuai ijazah/akta. Setelah kirim, kamu langsung mendapat nomor pendaftaran.</p>
+            <form id="formDaftar" class="form-grid">
+              <div class="field full"><label>Nama Lengkap <em>*</em></label><input name="nama" required minlength="3" maxlength="80" placeholder="Nama sesuai ijazah"></div>
+              <div class="field"><label>NISN <em>*</em></label><input name="nisn" required inputmode="numeric" pattern="\d{10}" maxlength="10" placeholder="10 digit angka"></div>
+              <div class="field"><label>NIK <em>*</em></label><input name="nik" required inputmode="numeric" pattern="\d{16}" maxlength="16" placeholder="16 digit (lihat KK)"></div>
+              <div class="field"><label>Tempat Lahir <em>*</em></label><input name="tempatLahir" required placeholder="Contoh: Semarang"></div>
+              <div class="field"><label>Tanggal Lahir <em>*</em></label><input type="date" name="tanggalLahir" required></div>
+              <div class="field"><label>Jenis Kelamin <em>*</em></label>
+                <div class="seg">
+                  <input type="radio" id="jkL" name="jenisKelamin" value="L" required><label for="jkL">👦 Laki-laki</label>
+                  <input type="radio" id="jkP" name="jenisKelamin" value="P"><label for="jkP">👧 Perempuan</label>
+                </div>
+              </div>
+              <div class="field"><label>Asal Sekolah (SMP/MTs) <em>*</em></label><input name="asalSekolah" required placeholder="Contoh: SMP N 1 Ungaran"></div>
+              <div class="field"><label>Pilihan Jurusan 1 <em>*</em></label><select name="jurusan1" id="selJ1" required><option value="">— Pilih Jurusan —</option></select></div>
+              <div class="field"><label>Pilihan Jurusan 2</label><select name="jurusan2" id="selJ2"><option value="">— Tidak ada —</option></select></div>
+              <div class="field full"><label>Alamat Lengkap <em>*</em></label><textarea name="alamat" required minlength="10" placeholder="RT/RW, desa/kelurahan, kecamatan, kabupaten"></textarea></div>
+              <div class="field"><label>No. HP/WA Siswa <em>*</em></label><input type="tel" name="hp" required placeholder="08xxxxxxxxxx"></div>
+              <div class="field"><label>Email</label><input type="email" name="email" placeholder="Opsional"></div>
+              <div class="field"><label>Nama Orang Tua/Wali <em>*</em></label><input name="namaOrtu" required></div>
+              <div class="field"><label>No. HP/WA Orang Tua <em>*</em></label><input type="tel" name="hpOrtu" required placeholder="08xxxxxxxxxx"></div>
+              <div class="field full"><label class="check"><input type="checkbox" name="setuju" required><span>Saya menyatakan data di atas benar dan siap mengikuti proses verifikasi SPMB SMK Widya Praja Ungaran.</span></label></div>
+              <div class="field full"><button class="btn primary" id="btnDaftar" type="submit">Kirim Pendaftaran 🚀</button></div>
+            </form>
+            <div id="daftarResult" class="result" hidden>
+              <div class="big">🎉</div>
+              <h2 class="sec">Pendaftaran Berhasil!</h2>
+              <p class="sec-sub">Simpan nomor ini baik-baik untuk cek status dan verifikasi berkas.</p>
+              <div class="ticket">
+                <small>NOMOR PENDAFTARAN</small>
+                <div class="nomor" id="resNomor"></div>
+                <small id="resNama"></small><br>
+                <small id="resJurusan"></small>
+              </div>
+              <div class="cta-row center">
+                <button class="btn primary" id="btnCetak" type="button">🖨️ Cetak Bukti</button>
+                <button class="btn ghost" data-page="cek" type="button">🔍 Cek Status</button>
+                <button class="btn ghost" id="btnLagi" type="button">＋ Daftar Lagi</button>
+              </div>
+              <div class="note">Langkah selanjutnya: bawa berkas persyaratan (ijazah/SKL, rapor, KK, akta, pas foto) ke sekolah untuk verifikasi. Lihat menu Alur &amp; Syarat.</div>
+            </div>
+          </section>
+
+          <section id="cek" class="page">
+            <h2 class="sec">Cek Status Pendaftaran</h2>
+            <p class="sec-sub">Masukkan nomor pendaftaran yang kamu dapat setelah mendaftar.</p>
+            <form id="formCek" class="cek-row">
+              <input id="cekNomor" required placeholder="Contoh: SPMB-2027-0001" autocomplete="off">
+              <button class="btn primary" type="submit">Cek</button>
+            </form>
+            <div id="cekResult" class="card" hidden></div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="dock">
+    <button class="dock-item di-home active" data-page="beranda" data-label="Beranda">🏠</button>
+    <button class="dock-item di-jurusan" data-page="jurusan" data-label="Jurusan">🎓</button>
+    <button class="dock-item di-alur" data-page="alur" data-label="Alur & Syarat">🗓️</button>
+    <button class="dock-item di-daftar" data-page="daftar" data-label="Daftar">📝</button>
+    <button class="dock-item di-cek" data-page="cek" data-label="Cek Status">🔍</button>
+    <span class="dock-sep"></span>
+    <a class="dock-item di-admin" href="/admin.html" data-label="Admin">⚙️</a>
+    <a class="dock-item di-web" href="https://www.smkwidyapraja.sch.id/" target="_blank" rel="noopener" data-label="Website Sekolah">🧭</a>
+  </nav>
+
+  <div id="toasts"></div>
+  <script src="js/theme.js" defer></script>
+  <script src="js/app.js" defer></script>
+</body>
+</html>
