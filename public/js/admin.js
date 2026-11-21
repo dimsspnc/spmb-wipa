@@ -2,7 +2,6 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const tgl = s => { const d = new Date(s); return isNaN(d) ? s : d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }); };
 const stClass = { "Menunggu Verifikasi": "st-wait", "Terverifikasi": "st-verify", "Diterima": "st-ok", "Ditolak": "st-no" };
-
 let token = sessionStorage.getItem("spmbToken") || "";
 let DATA = [];
 let JUR = [];
@@ -14,10 +13,7 @@ async function api(url, opt = {}) {
     headers: { "Content-Type": "application/json", Authorization: "Bearer " + token, ...(opt.headers || {}) }
   });
   const j = await r.json().catch(() => ({}));
-  if (r.status === 401) {
-    keluar(false);
-    throw new Error(j.pesan || "Sesi habis, login ulang");
-  }
+  if (r.status === 401) { keluar(false); throw new Error(j.pesan || "Sesi habis, login ulang"); }
   if (!r.ok || j.ok === false) throw new Error(j.pesan || "Terjadi kesalahan");
   return j;
 }
@@ -86,7 +82,7 @@ function render() {
       <td class="mono">${esc(p.nomor)}</td>
       <td><b>${esc(p.nama)}</b><br><small>${esc(p.asalSekolah)}</small></td>
       <td class="mono">${esc(p.nisn)}</td>
-      <td><span class="chip">${esc(p.jurusan1)}</span>${p.jurusan2 ? ` <span class="chip">${esc(p.jurusan2)}</span>` : ""}</td>
+      <td><span class="chip">${esc(p.jurusan1)}</span>${p.jurusan2 ? `<span class="chip">${esc(p.jurusan2)}</span>` : ""}</td>
       <td>${esc(p.hp)}</td>
       <td><select class="st-select ${stClass[p.status] || ""}" data-id="${p.id}">${STATUS.map(s => `<option${s === p.status ? " selected" : ""}>${esc(s)}</option>`).join("")}</select></td>
       <td><button class="icon-btn" data-del="${p.id}" title="Hapus" type="button">🗑</button></td>
@@ -105,13 +101,8 @@ $("#tbody").addEventListener("click", async e => {
   if (del) {
     const p = DATA.find(x => x.id === del.dataset.del);
     if (!p || !confirm(`Hapus data ${p.nama} (${p.nomor})?`)) return;
-    try {
-      await api("/api/admin/pendaftar/" + p.id, { method: "DELETE" });
-      toast("Data dihapus");
-      muatData();
-    } catch (err) {
-      toast(err.message, "err");
-    }
+    try { await api("/api/admin/pendaftar/" + p.id, { method: "DELETE" }); toast("Data dihapus"); muatData(); }
+    catch (err) { toast(err.message, "err"); }
     return;
   }
   if (e.target.closest("select")) return;
@@ -123,10 +114,7 @@ $("#tbody").addEventListener("change", async e => {
   const sel = e.target.closest(".st-select");
   if (!sel) return;
   try {
-    await api("/api/admin/pendaftar/" + sel.dataset.id, {
-      method: "PATCH",
-      body: JSON.stringify({ status: sel.value })
-    });
+    await api("/api/admin/pendaftar/" + sel.dataset.id, { method: "PATCH", body: JSON.stringify({ status: sel.value }) });
     const p = DATA.find(x => x.id === sel.dataset.id);
     if (p) p.status = sel.value;
     render();
@@ -142,21 +130,13 @@ function detail(id) {
   if (!p) return;
   const nj = k => (JUR.find(j => j.kode === k) || {}).nama || k || "-";
   const rows = [
-    ["Nomor", p.nomor],
-    ["Status", p.status],
-    ["Nama", p.nama],
-    ["NISN", p.nisn],
-    ["NIK", p.nik],
+    ["Nomor", p.nomor], ["Status", p.status], ["Nama", p.nama], ["NISN", p.nisn], ["NIK", p.nik],
     ["TTL", p.tempatLahir + ", " + tgl(p.tanggalLahir)],
     ["Jenis Kelamin", p.jenisKelamin === "L" ? "Laki-laki" : "Perempuan"],
-    ["Asal Sekolah", p.asalSekolah],
-    ["Jurusan 1", nj(p.jurusan1)],
-    ["Jurusan 2", p.jurusan2 ? nj(p.jurusan2) : "-"],
-    ["Alamat", p.alamat],
-    ["HP/WA Siswa", p.hp],
-    ["Email", p.email || "-"],
-    ["Orang Tua/Wali", p.namaOrtu],
-    ["HP/WA Ortu", p.hpOrtu],
+    ["Asal Sekolah", p.asalSekolah], ["Jurusan 1", nj(p.jurusan1)],
+    ["Jurusan 2", p.jurusan2 ? nj(p.jurusan2) : "-"], ["Alamat", p.alamat],
+    ["HP/WA Siswa", p.hp], ["Email", p.email || "-"],
+    ["Orang Tua/Wali", p.namaOrtu], ["HP/WA Ortu", p.hpOrtu],
     ["Waktu Daftar", new Date(p.createdAt).toLocaleString("id-ID")]
   ];
   $("#modalBody").innerHTML = rows.map(([k, v]) => `<div class="info-row"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join("");
