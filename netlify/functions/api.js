@@ -5,14 +5,10 @@ const crypto = require("crypto");
 
 const app = express();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Dimas123";
-
-// Inisialisasi Supabase
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // Pake secret key, ora anon key
-);
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 const STATUS_LIST = ["Menunggu Verifikasi", "Terverifikasi", "Diterima", "Ditolak"];
+
 const SCHOOL = {
   nama: "SMK Widya Praja Ungaran",
   tagline: "SMK Bisa Hebat!",
@@ -49,8 +45,28 @@ const SCHOOL = {
   ]
 };
 
-const tokens = new Map();
+const toCamel = p => ({
+  id: p.id,
+  nomor: p.nomor,
+  nama: p.nama,
+  nisn: p.nisn,
+  nik: p.nik,
+  tempatLahir: p.tempat_lahir,
+  tanggalLahir: p.tanggal_lahir,
+  jenisKelamin: p.jenis_kelamin,
+  asalSekolah: p.asal_sekolah,
+  alamat: p.alamat,
+  hp: p.hp,
+  email: p.email,
+  namaOrtu: p.nama_ortu,
+  hpOrtu: p.hp_ortu,
+  jurusan1: p.jurusan1,
+  jurusan2: p.jurusan2,
+  status: p.status,
+  createdAt: p.created_at
+});
 
+const tokens = new Map();
 function auth(req, res, next) {
   const t = (req.headers.authorization || "").replace("Bearer ", "");
   if (!tokens.has(t) || tokens.get(t) < Date.now()) {
@@ -64,14 +80,15 @@ app.use(express.json({ limit: "100kb" }));
 
 app.get("/api/info", async (req, res) => {
   try {
-    const { count } = await supabase.from("pendaftar").select("*", { count: "exact", head: true });
+    const { data: rows } = await supabase.from("pendaftar").select("jurusan1,status");
+    const all = rows || [];
     const jurusan = SCHOOL.jurusan.map(j => ({
       ...j,
-      terisi: 0 // Nanti bisa diupdate query count per jurusan, sementara 0 dlu
+      terisi: all.filter(p => p.status !== "Ditolak" && p.jurusan1 === j.kode).length
     }));
-    res.json({ ...SCHOOL, jurusan, totalPendaftar: count || 0 });
-  } catch (err) {
-    res.status(500).json({ ok: false, pesan: "Gagal memuat data" });
+    res.json({ ...SCHOOL, jurusan, totalPendaftar: all.length });
+  } catch (e) {
+    res.status(500).json({ ok: false, pesan: "Gagal memuat data sekolah: " + e.message });
   }
 });
 
@@ -94,10 +111,8 @@ app.post("/api/daftar", async (req, res) => {
     jurusan1: teks(b.jurusan1),
     jurusan2: teks(b.jurusan2)
   };
-
   const hpOK = v => /^(?:\+62|62|0)8\d{7,11}$/.test(v);
   const kode = SCHOOL.jurusan.map(j => j.kode);
-
   if (d.nama.length < 3) return res.status(400).json({ ok: false, pesan: "Nama lengkap minimal 3 huruf" });
   if (!/^\d{10}$/.test(d.nisn)) return res.status(400).json({ ok: false, pesan: "NISN harus 10 digit angka" });
   if (!/^\d{16}$/.test(d.nik)) return res.status(400).json({ ok: false, pesan: "NIK harus 16 digit angka" });
@@ -111,36 +126,26 @@ app.post("/api/daftar", async (req, res) => {
   if (!kode.includes(d.jurusan1)) return res.status(400).json({ ok: false, pesan: "Pilihan jurusan 1 tidak valid" });
   if (d.jurusan2 && (!kode.includes(d.jurusan2) || d.jurusan2 === d.jurusan1)) return res.status(400).json({ ok: false, pesan: "Pilihan jurusan 2 harus berbeda dari pilihan 1" });
   if (b.setuju !== true) return res.status(400).json({ ok: false, pesan: "Centang pernyataan kebenaran data" });
-
-  // Cek NISN duplikat
-  const { data: existing } = await supabase.from("pendaftar").select("nisn").eq("nisn", d.nisn).single();
-  if (existing) return res.status(409).json({ ok: false, pesan: "NISN sudah terdaftar. Gunakan menu Cek Status." });
-
-  const tahun = SCHOOL.tahunAjaran.slice(0, 4);
-  const { count } = await supabase.from("pendaftar").select("*", { count: "exact", head: true });
-  const counter = (count || 0) + 1;
-  const nomor = `SPMB-${tahun}-${String(counter).padStart(4, "0")}`;
-
-  const { data, error } = await supabase.from("pendaftar").insert([{
-    nomor,
-    status: "Menunggu Verifikasi",
-    ...d
-  }]).select().single();
-
-  if (error) return res.status(500).json({ ok: false, pesan: "Gagal menyimpan data: " + error.message });
-
-  res.json({ ok: true, nomor: data.nomor });
+  try {
+    const { data: dup } = await supabase.from("pendaftar").select("nisn").eq("nisn", d.nisn).single();
+    if (dup) return res.status(409).json({ ok: false, pesan: "NISN sudah terdaftar. Gunakan menu Cek Status." });
+    const { count } = await supabase.from("pendaftar").select("*", { count: "exact", head: true });
+    const tahun = SCHOOL.tahunAjaran.slice(0, 4);
+    const { data, error } = await supabase.from("pendaftar").insert([{
+      nomor: `SPMB-${tahun}-${String((count || 0) + 1).padStart(4, "0")}`,
+      status: "Menunggu Verifikasi",
+      ...d
+    }]).select().single();
+    if (error) return res.status(500).json({ ok: false, pesan: error.message });
+    res.json({ ok: true, nomor: data.nomor });
+  } catch (e) {
+    res.status(500).json({ ok: false, pesan: "Gagal menyimpan data: " + e.message });
+  }
 });
 
 app.get("/api/status/:nomor", async (req, res) => {
-  const { data, error } = await supabase
-    .from("pendaftar")
-    .select("*")
-    .ilike("nomor", req.params.nomor)
-    .single();
-
+  const { data, error } = await supabase.from("pendaftar").select("*").ilike("nomor", req.params.nomor).single();
   if (error || !data) return res.status(404).json({ ok: false, pesan: "Nomor pendaftaran tidak ditemukan" });
-
   const nj = k => (SCHOOL.jurusan.find(j => j.kode === k) || {}).nama || k;
   res.json({
     ok: true,
@@ -166,28 +171,23 @@ app.post("/api/admin/login", (req, res) => {
 app.get("/api/admin/pendaftar", auth, async (req, res) => {
   const { data, error } = await supabase.from("pendaftar").select("*").order("created_at", { ascending: false });
   if (error) return res.status(500).json({ ok: false, pesan: error.message });
-  res.json({ ok: true, data: data || [], statusList: STATUS_LIST, jurusan: SCHOOL.jurusan });
+  res.json({ ok: true, data: (data || []).map(toCamel), statusList: STATUS_LIST, jurusan: SCHOOL.jurusan });
 });
 
 app.patch("/api/admin/pendaftar/:id", auth, async (req, res) => {
   const { status } = req.body || {};
   if (!STATUS_LIST.includes(status)) return res.status(400).json({ ok: false, pesan: "Status tidak valid" });
-  
   const { error } = await supabase.from("pendaftar").update({ status }).eq("id", req.params.id);
   if (error) return res.status(500).json({ ok: false, pesan: error.message });
-  
   res.json({ ok: true });
 });
 
 app.delete("/api/admin/pendaftar/:id", auth, async (req, res) => {
   const { error } = await supabase.from("pendaftar").delete().eq("id", req.params.id);
   if (error) return res.status(500).json({ ok: false, pesan: error.message });
-  
   res.json({ ok: true });
 });
 
-app.use((err, req, res, next) => {
-  res.status(400).json({ ok: false, pesan: "Permintaan tidak valid" });
-});
+app.use((err, req, res, next) => res.status(400).json({ ok: false, pesan: "Permintaan tidak valid" }));
 
 exports.handler = serverless(app);
